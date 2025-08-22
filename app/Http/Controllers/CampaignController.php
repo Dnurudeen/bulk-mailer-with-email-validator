@@ -9,6 +9,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
+use App\Events\CampaignProgressUpdated;
+use App\Support\CampaignStats;
+
 class CampaignController extends Controller
 {
     public function index()
@@ -19,12 +22,6 @@ class CampaignController extends Controller
         return view('campaigns.index', compact('campaigns'));
     }
 
-    // public function progress()
-    // {
-    //     $jobs = DB::table('email_jobs')->latest()->take(20)->get();
-    //     // return response()->json($jobs);
-    //     return view('campaigns.progress', compact('jobs'));
-    // }
 
     public function create()
     {
@@ -97,6 +94,12 @@ class CampaignController extends Controller
             'status' => 'scheduled',
         ]);
 
+        event(new CampaignProgressUpdated(
+            $campaign->id,
+            CampaignStats::snapshot($campaign),
+            '[' . now()->format('H:i:s') . "] Status changed to {$campaign->status}"
+        ));
+
         return back()->with('success', 'Campaign scheduled.');
     }
 
@@ -104,7 +107,15 @@ class CampaignController extends Controller
     {
         $this->authorizeOwner($campaign);
         $campaign->update(['status' => 'sending', 'scheduled_at' => now()]);
+
+        event(new CampaignProgressUpdated(
+            $campaign->id,
+            CampaignStats::snapshot($campaign),
+            '[' . now()->format('H:i:s') . "] Status changed to {$campaign->status}"
+        ));
+
         $this->dispatchBatch($campaign);
+
         return back()->with('success', 'Dispatching started.');
     }
 
@@ -112,6 +123,13 @@ class CampaignController extends Controller
     {
         $this->authorizeOwner($campaign);
         $campaign->update(['status' => 'paused']);
+
+        event(new CampaignProgressUpdated(
+            $campaign->id,
+            CampaignStats::snapshot($campaign),
+            '[' . now()->format('H:i:s') . "] Status changed to {$campaign->status}"
+        ));
+
         return back()->with('success', 'Campaign paused.');
     }
 
@@ -119,7 +137,15 @@ class CampaignController extends Controller
     {
         $this->authorizeOwner($campaign);
         $campaign->update(['status' => 'sending']);
+
+        event(new CampaignProgressUpdated(
+            $campaign->id,
+            CampaignStats::snapshot($campaign),
+            '[' . now()->format('H:i:s') . "] Status changed to {$campaign->status}"
+        ));
+
         $this->dispatchBatch($campaign);
+
         return back()->with('success', 'Campaign resumed.');
     }
 
@@ -145,6 +171,13 @@ class CampaignController extends Controller
         if ($remaining === 0) {
             $campaign->update(['status' => 'completed']);
         }
+
+        // Broadcast batch snapshot once after queuing
+        event(new CampaignProgressUpdated(
+            $campaign->id,
+            CampaignStats::snapshot($campaign),
+            '[' . now()->format('H:i:s') . "] Queued next batch for campaign #{$campaign->id}"
+        ));
     }
 
     protected function authorizeOwner(MailCampaign $campaign): void

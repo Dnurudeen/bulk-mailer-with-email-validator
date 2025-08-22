@@ -2,7 +2,6 @@
 
 namespace App\Jobs;
 
-
 use App\Mail\CampaignMailable;
 use App\Models\MailCampaign;
 use App\Models\Recipient;
@@ -17,6 +16,9 @@ use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
+
+use App\Events\CampaignProgressUpdated;
+use App\Support\CampaignStats;
 
 class SendCampaignEmail implements ShouldQueue
 {
@@ -63,10 +65,6 @@ class SendCampaignEmail implements ShouldQueue
                     'error'  => 'Invalid email',
                 ]);
 
-                // DB::table('email_jobs')->where('id', $this->jobId)->update([
-                //     'status' => 'FAILED',
-                //     'error'  => 'Invalid email',
-                // ]);
                 return;
             }
 
@@ -82,23 +80,19 @@ class SendCampaignEmail implements ShouldQueue
                 'error'   => null,
             ]);
 
-            // Mark job
-            // DB::table('email_jobs')->where('id', $this->jobId)->update([
-            //     'status'       => 'DONE',
-            //     'completed_at' => now(),
-            //     'duration'     => now()->diffInMilliseconds($this->startedAt)
-            // ]);
+            // After marking sent or failed, add:
+            $stats = CampaignStats::snapshot($campaign);
+            $line  = '[' . now()->format('H:i:s') . "] Processed: SendCampaignEmail for {$recipient->email}";
+            event(new CampaignProgressUpdated($campaign->id, $stats, $line));
 
-
+            $line = '[' . now()->format('H:i:s') . "] Paused: job requeued for {$campaign->id}";
+            event(new CampaignProgressUpdated($campaign->id, CampaignStats::snapshot($campaign), $line));
         } catch (ModelNotFoundException $e) {
             Log::warning('Campaign or recipient missing for job', [
                 'campaignId' => $this->campaignId,
                 'recipientId' => $this->recipientId
             ]);
-            // DB::table('email_jobs')->where('id', $this->jobId)->update([
-            //     'status' => 'FAILED',
-            //     'error'  => $e->getMessage(),
-            // ]);
+
             $this->fail($e);
         } catch (\Throwable $e) {
             // Mark failed
@@ -108,10 +102,6 @@ class SendCampaignEmail implements ShouldQueue
                     'error'  => substr($e->getMessage(), 0, 190),
                 ]);
             }
-            // DB::table('email_jobs')->where('id', $this->jobId)->update([
-            //     'status' => 'FAILED',
-            //     'error'  => substr($e->getMessage(), 0, 190),
-            // ]);
             throw $e;
         }
     }
