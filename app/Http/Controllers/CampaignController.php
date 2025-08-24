@@ -82,6 +82,17 @@ class CampaignController extends Controller
         return back()->with('success', 'Recipients uploaded.');
     }
 
+    public function clearRecipients(MailCampaign $campaign)
+    {
+        // Assuming you have a relationship `recipients()`
+        $campaign->recipients()->delete();
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'All recipients cleared successfully.'
+        ]);
+    }
+
     public function schedule(MailCampaign $campaign, Request $request)
     {
         $this->authorizeOwner($campaign);

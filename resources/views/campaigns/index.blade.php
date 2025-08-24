@@ -2,16 +2,16 @@
 <x-app-layout>
     <x-slot name="header">
         <div class="flex justify-between items-center mb-4">
-            <h1 class="font-semibold text-xl text-gray-800 leading-tight">Campaigns</h1>
-            <a class="px-4 py-2 bg-blue-600 btn btn-dark rounded" href="{{ route('campaigns.create') }}">New Campaign</a>
+            <h1 class="font-semibold text-xl light:text-gray-800 leading-tight">Campaigns</h1>
+            <a class="px-4 py-2 bg-red-600 btn btn-danger rounded" href="{{ route('campaigns.create') }}">New Campaign</a>
         </div>
     </x-slot>
 
     <div class="py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <table class="w-full bg-white shadow rounded table table-hover">
+            <table class="w-full dark:bg-gray shadow rounded table table-hover">
                 <thead class="">
-                    <tr class="bg-gray-50">
+                    <tr class="bg-gray-500">
                         <th class="text-left p-3">Name</th>
                         <th class="text-left p-3">Status</th>
                         <th class="text-left p-3">Scheduled</th>
@@ -20,11 +20,11 @@
                 </thead>
                 <tbody>
                     @forelse($campaigns as $c)
-                        <tr class="border-t hover:bg-gray-50">
+                        <tr class="border-t light:hover:bg-gray-100 dark:hover:bg-gray-700">
                             <td class="p-3">{{ $c->name }}</td>
                             <td class="p-3">{{ $c->status }}</td>
                             <td class="p-3">{{ optional($c->scheduled_at)->toDayDateTimeString() }}</td>
-                            <td class=""><a class="btn btn-dark" href="{{ route('campaigns.show', $c) }}">Open</a>
+                            <td class=""><a class="btn btn-dark bg-red-600 text-white btn px-2 py-1 rounded" href="{{ route('campaigns.show', $c) }}">Open</a>
                             </td>
                         </tr>
                     @empty

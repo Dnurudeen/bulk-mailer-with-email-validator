@@ -33,4 +33,13 @@ class CampaignProgressUpdated implements ShouldBroadcast
     {
         return 'progress'; // 👈 matches .listen('.progress')
     }
+
+    public function broadcastWith(): array
+    {
+        return [
+            'campaignId' => $this->campaignId,
+            'stats'      => $this->stats,
+            'line'       => $this->line,
+        ];
+    }
 }

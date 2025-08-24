@@ -4,35 +4,74 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Third Party Services
+    | Reverb Apps
     |--------------------------------------------------------------------------
     |
-    | This file is for storing the credentials for third party services such
-    | as Mailgun, Postmark, AWS and more. This file provides the de facto
-    | location for this type of information, allowing packages to have
-    | a conventional file to locate the various service credentials.
+    | You may define the apps that are supported by your Reverb server. You
+    | should define your "app id", "app key", and "app secret" values.
     |
     */
 
-    'postmark' => [
-        'token' => env('POSTMARK_TOKEN'),
-    ],
-
-    'resend' => [
-        'key' => env('RESEND_KEY'),
-    ],
-
-    'ses' => [
-        'key' => env('AWS_ACCESS_KEY_ID'),
-        'secret' => env('AWS_SECRET_ACCESS_KEY'),
-        'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
-    ],
-
-    'slack' => [
-        'notifications' => [
-            'bot_user_oauth_token' => env('SLACK_BOT_USER_OAUTH_TOKEN'),
-            'channel' => env('SLACK_BOT_USER_DEFAULT_CHANNEL'),
+    'apps' => [
+        [
+            'id' => env('REVERB_APP_ID'),
+            'name' => env('APP_NAME', 'Laravel'),
+            'key' => env('VITE_REVERB_APP_KEY'),
+            'secret' => env('REVERB_APP_SECRET'),
+            'capacity' => null,
+            'allowed_origins' => [
+                env('APP_URL'),
+            ],
         ],
     ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Server Host / Port
+    |--------------------------------------------------------------------------
+    |
+    | The Reverb server runs on the given host and port. The default should
+    | work in most cases, but you are free to change them if needed.
+    |
+    */
+
+    'host' => env('VITE_REVERB_HOST', '127.0.0.1'),
+    'port' => env('VITE_REVERB_PORT', 8080),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Scheme
+    |--------------------------------------------------------------------------
+    |
+    | This value determines the scheme (http or https) that should be used
+    | when broadcasting events from the server to the clients.
+    |
+    */
+
+    'scheme' => env('VITE_REVERB_SCHEME', 'http'),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Ping Interval
+    |--------------------------------------------------------------------------
+    |
+    | This value determines how often the server should send a ping frame to
+    | clients to keep the WebSocket connection alive (in seconds).
+    |
+    */
+
+    'ping_interval' => 30,
+
+    /*
+    |--------------------------------------------------------------------------
+    | Statistics
+    |--------------------------------------------------------------------------
+    |
+    | If enabled, Reverb will collect statistics about connections, peak
+    | connections, messages sent, and messages received.
+    |
+    */
+
+    'collect_statistics' => true,
 
 ];

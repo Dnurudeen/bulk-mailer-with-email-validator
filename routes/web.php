@@ -36,6 +36,9 @@ Route::middleware('auth')->group(function () {
     Route::post('/campaigns/{campaign}/resume', [CampaignController::class, 'resume'])->name('campaigns.resume');
     Route::post('/campaigns/{campaign}/dispatch-next', [CampaignController::class, 'dispatchNext'])->name('campaigns.dispatch-next');
 
+    Route::delete('/campaigns/{campaign}/recipients', [CampaignController::class, 'clearRecipients'])
+        ->name('campaigns.recipients.clear');
+
     Route::get('/campaigns/progress', [CampaignController::class, 'progress']);
 
     // Route::post('/campaigns/{campaign}/dispatch-batch', [CampaignController::class, 'dispatchNextBatch'])

@@ -1,7 +1,7 @@
 <x-app-layout>
     <x-slot name="header">
         <div class="flex justify-between items-center mb-4">
-            <h1 class="font-semibold text-xl text-gray-800 leading-tight">{{ $campaign->name }}</h1>
+            <h1 class="font-semibold text-xl light:text-gray-800 leading-tight">{{ $campaign->name }}</h1>
             {{-- <h1 class="text-2xl font-bold mb-4">{{ $campaign->name }}</h1> --}}
         </div>
     </x-slot>
@@ -10,7 +10,7 @@
 
     <div class="py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white p-4 rounded shadow mb-4">
+            <div class="border border-white-400 p-4 rounded shadow mb-4">
                 <p><strong>Status:</strong> {{ $campaign->status }}</p>
                 <p><strong>Subject:</strong> {{ $campaign->subject }}</p>
                 <p><strong>Scheduled At:</strong> {{ optional($campaign->scheduled_at)->toDayDateTimeString() ?? '—' }}
@@ -19,39 +19,55 @@
 
             <div class="flex gap-2 mb-6">
                 <form method="POST" action="{{ route('campaigns.upload', $campaign) }}" enctype="multipart/form-data"
-                    class="bg-white p-4 rounded shadow">
+                    class="border border-white-400 p-4 rounded shadow">
                     @csrf
-                    <label class="block font-medium mb-2">Upload Recipients CSV (headers: email,name)</label>
+                    <label class="block font-medium mb-2 text-gray-500">Upload Recipients CSV (headers:
+                        email,name)</label>
                     <input type="file" name="csv" accept=".csv,text/csv" class="mb-2">
-                    <button class="px-4 py-2 bg-gray-800 text-white rounded">Upload</button>
+                    <button class="px-4 py-2 bg-red-600 text-white rounded">Upload</button>
                 </form>
 
                 <form method="POST" action="{{ route('campaigns.schedule', $campaign) }}"
-                    class="bg-white p-4 rounded shadow">
+                    class="border border-white-400 p-4 rounded shadow">
                     @csrf
-                    <label class="block font-medium">Schedule At</label>
-                    <input name="scheduled_at" type="datetime-local" class="border rounded p-2 mb-2">
-                    <button class="px-4 py-2 bg-gray-800 text-white rounded">Set Schedule</button>
+                    <label class="block font-medium text-gray-500">Schedule At</label>
+                    <input name="scheduled_at" type="datetime-local"
+                        class="border border-white-400 dark:bg-gray-800 rounded p-2 mb-2">
+                    <button class="px-4 py-2 bg-red-600 text-white rounded">Set Schedule</button>
                 </form>
             </div>
 
             <div class="flex gap-2 mb-6">
                 <form method="POST" action="{{ route('campaigns.start', $campaign) }}">@csrf
-                    <button class="px-4 py-2 btn btn-success rounded">Start Now</button>
+                    <button class="px-4 py-2 btn btn-success bg-green-500 rounded">Start Now</button>
                 </form>
                 <form method="POST" action="{{ route('campaigns.pause', $campaign) }}">@csrf
-                    <button class="px-4 py-2 btn btn-warning rounded">Pause</button>
+                    <button class="px-4 py-2 btn btn-warning dark:bg-white bg-black dark:text-gray-800 text-white rounded">Pause</button>
                 </form>
                 <form method="POST" action="{{ route('campaigns.resume', $campaign) }}">@csrf
-                    <button class="px-4 py-2 btn btn-info rounded">Resume</button>
+                    <button class="px-4 py-2 btn btn-info bg-blue-600 rounded">Resume</button>
                 </form>
             </div>
 
-            <div class="bg-white p-4 rounded shadow">
-                <h2 class="font-semibold mb-2">Recent Recipients (first 50)</h2>
+            <div class="border border-white-400 p-4 rounded shadow" x-data="campaignProgress({{ $campaign->id }}, {{ json_encode([
+                'pending' => $campaign->recipients()->wherePivot('status', 'pending')->count(),
+                'queued' => $campaign->recipients()->wherePivot('status', 'queued')->count(),
+                'sent' => $campaign->recipients()->wherePivot('status', 'sent')->count(),
+                'failed' => $campaign->recipients()->wherePivot('status', 'failed')->count(),
+                'status' => $campaign->status,
+            ]) }})" x-init="init()">
+                <div class="flex justify-between items-center my-auto mb-5">
+                    <h2 class="font-semibold">Recent Recipients (first 50)</h2>
+
+                    <button type="button" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded shadow"
+                        @click="clearRecipients">
+                        Clear All Recipients
+                    </button>
+                </div>
+
                 <table class="w-full">
                     <thead>
-                        <tr class="text-left border-b">
+                        <tr class="text-left border-b text-gray-500">
                             <th class="p-2">Email</th>
                             <th class="p-2">Status</th>
                             <th class="p-2">Queued</th>
@@ -73,16 +89,17 @@
                 </table>
             </div>
 
-
+            <br>
 
             {{-- LIVE PROGRESS PANEL --}}
-            <div class="bg-white p-4 rounded shadow mb-6 mt-6" x-data="campaignProgress({{ $campaign->id }}, {{ json_encode([
+            <div class="border border-white-400 p-4 rounded shadow mb-6 mt-6" x-data="campaignProgress({{ $campaign->id }}, {{ json_encode([
                 'pending' => $campaign->recipients()->wherePivot('status', 'pending')->count(),
                 'queued' => $campaign->recipients()->wherePivot('status', 'queued')->count(),
                 'sent' => $campaign->recipients()->wherePivot('status', 'sent')->count(),
                 'failed' => $campaign->recipients()->wherePivot('status', 'failed')->count(),
                 'status' => $campaign->status,
-            ]) }})" x-init="init()">
+            ]) }})"
+                x-init="init()">
                 <div class="flex justify-between items-center mb-3">
                     <div>
                         <div class="text-sm text-gray-500">Status</div>
@@ -101,72 +118,79 @@
                 <div class="grid grid-cols-4 gap-4 text-center mb-4">
                     <div class="p-2 rounded bg-gray-50">
                         <div class="text-xs text-gray-500">Pending</div>
-                        <div class="text-xl font-bold" x-text="stats.pending"></div>
+                        <div class="text-xl font-bold text-gray-500" x-text="stats.pending"></div>
                     </div>
                     <div class="p-2 rounded bg-gray-50">
                         <div class="text-xs text-gray-500">Queued</div>
-                        <div class="text-xl font-bold" x-text="stats.queued"></div>
+                        <div class="text-xl font-bold text-gray-500" x-text="stats.queued"></div>
                     </div>
                     <div class="p-2 rounded bg-gray-50">
                         <div class="text-xs text-gray-500">Sent</div>
-                        <div class="text-xl font-bold" x-text="stats.sent"></div>
+                        <div class="text-xl font-bold text-green-500" x-text="stats.sent"></div>
                     </div>
                     <div class="p-2 rounded bg-gray-50">
                         <div class="text-xs text-gray-500">Failed</div>
-                        <div class="text-xl font-bold" x-text="stats.failed"></div>
+                        <div class="text-xl font-bold text-red-600" x-text="stats.failed"></div>
                     </div>
                 </div>
 
                 <div>
                     <div class="text-sm font-semibold mb-2">Live Worker Output</div>
-                    <pre id="workerLog" class="bg-black text-green-400 p-3 rounded h-48 overflow-auto text-xs"></pre>
+                    {{-- <pre id="workerLog" class="bg-black text-green-400 p-3 rounded h-48 overflow-auto text-xs"></pre> --}}
+                    <div class="bg-black text-green-400 font-mono p-2 h-40 overflow-y-scroll rounded">
+                        <template x-for="line in logLines" :key="line">
+                            <div x-text="line"></div>
+                        </template>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-</x-app-layout>
 
-{{-- Alpine.js (tiny) for reactive widget; if you already have it, skip the CDN) --}}
-<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
-<script type="module">
-  window.campaignProgress = (campaignId, initial) => ({
-    campaignId,
-    stats: {
-      pending: initial.pending ?? 0,
-      queued:  initial.queued ?? 0,
-      sent:    initial.sent ?? 0,
-      failed:  initial.failed ?? 0,
-      status:  initial.status ?? 'draft',
-      total() { return Math.max(1, this.pending + this.queued + this.sent + this.failed); }
-    },
-    get percent() {
-      const done = this.stats.sent + this.stats.failed;
-      return Number(((done / this.stats.total()) * 100).toFixed(1));
-    },
-    init() {
-      const logEl = document.getElementById('workerLog');
-      const appendLog = (line) => {
-        if (!line) return;
-        const atBottom = (logEl.scrollTop + logEl.clientHeight) >= (logEl.scrollHeight - 5);
-        logEl.textContent += (logEl.textContent ? '\n' : '') + line;
-        if (atBottom) logEl.scrollTop = logEl.scrollHeight;
-      };
+    {{-- Alpine.js (tiny) for reactive widget; if you already have it, skip the CDN) --}}
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script type="module">
+        window.campaignProgress = (campaignId, initial) => ({
+            campaignId,
+            stats: {
+                pending: initial.pending ?? 0,
+                queued: initial.queued ?? 0,
+                sent: initial.sent ?? 0,
+                failed: initial.failed ?? 0,
+                status: initial.status ?? 'draft',
+                total() {
+                    return Math.max(1, this.pending + this.queued + this.sent + this.failed);
+                }
+            },
+            get percent() {
+                const done = this.stats.sent + this.stats.failed;
+                return Number(((done / this.stats.total()) * 100).toFixed(1));
+            },
+            init() {
+                const logEl = document.getElementById('workerLog');
+                const appendLog = (line) => {
+                    if (!line) return;
+                    const atBottom = (logEl.scrollTop + logEl.clientHeight) >= (logEl.scrollHeight - 5);
+                    logEl.textContent += (logEl.textContent ? '\n' : '') + line;
+                    if (atBottom) logEl.scrollTop = logEl.scrollHeight;
+                };
 
-      // Subscribe to private channel via Echo (Reverb)
-      window.Echo.private(`campaign.${this.campaignId}`)
-        .listen('.progress', (e) => {
-          if (e?.stats) {
-            this.stats.pending = e.stats.pending ?? this.stats.pending;
-            this.stats.queued  = e.stats.queued  ?? this.stats.queued;
-            this.stats.sent    = e.stats.sent    ?? this.stats.sent;
-            this.stats.failed  = e.stats.failed  ?? this.stats.failed;
-            this.stats.status  = e.stats.status  ?? this.stats.status;
-          }
-          if (e?.line) appendLog(e.line);
+                // Subscribe to private channel via Echo (Reverb)
+                window.Echo.private(`campaign.${this.campaignId}`)
+                    .listen('.progress', (e) => {
+                        if (e?.stats) {
+                            this.stats.pending = e.stats.pending ?? this.stats.pending;
+                            this.stats.queued = e.stats.queued ?? this.stats.queued;
+                            this.stats.sent = e.stats.sent ?? this.stats.sent;
+                            this.stats.failed = e.stats.failed ?? this.stats.failed;
+                            this.stats.status = e.stats.status ?? this.stats.status;
+                        }
+                        if (e?.line) appendLog(e.line);
+                    });
+
+                // Initial line
+                appendLog(`[${new Date().toLocaleTimeString()}] Subscribed: campaign.${this.campaignId}`);
+            }
         });
-
-      // Initial line
-      appendLog(`[${new Date().toLocaleTimeString()}] Subscribed: campaign.${this.campaignId}`);
-    }
-  });
-</script>
+    </script>
+</x-app-layout>

@@ -82,11 +82,12 @@ class SendCampaignEmail implements ShouldQueue
 
             // After marking sent or failed, add:
             $stats = CampaignStats::snapshot($campaign);
-            $line  = '[' . now()->format('H:i:s') . "] Processed: SendCampaignEmail for {$recipient->email}";
-            event(new CampaignProgressUpdated($campaign->id, $stats, $line));
+            $line = '[' . now()->format('H:i:s') . "] Processed: {$recipient->email}";
+            // event(new CampaignProgressUpdated($campaign->id, $stats, $line));
+            broadcast(new CampaignProgressUpdated($campaign->id, $stats, $line))->toOthers();
 
-            $line = '[' . now()->format('H:i:s') . "] Paused: job requeued for {$campaign->id}";
-            event(new CampaignProgressUpdated($campaign->id, CampaignStats::snapshot($campaign), $line));
+            // $line = '[' . now()->format('H:i:s') . "] Paused: job requeued for {$campaign->id}";
+            // event(new CampaignProgressUpdated($campaign->id, CampaignStats::snapshot($campaign), $line));
         } catch (ModelNotFoundException $e) {
             Log::warning('Campaign or recipient missing for job', [
                 'campaignId' => $this->campaignId,
