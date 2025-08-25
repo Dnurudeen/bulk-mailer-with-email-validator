@@ -13,11 +13,16 @@ window.campaignProgress = function (campaignId, initialStats) {
         logLines: [],
         init() {
             this.updatePercent();
-            Echo.private(`campaign.${campaignId}`).listen(".progress", (e) => {
-                this.stats = e.stats;
-                this.logLines.push(e.line);
-                this.updatePercent();
-            });
+            Echo.private(`campaign.${campaignId}`)
+                .listen(".progress", (e) => {
+                    console.log("📢 EVENT:", e);
+                    this.stats = e.stats;
+                    this.logLines.push(e.line);
+                    this.updatePercent();
+                })
+                .error((error) => {
+                    console.error("Echo error:", error);
+                });
         },
         updatePercent() {
             const total =

@@ -13,23 +13,23 @@ class CampaignProgressUpdated implements ShouldBroadcast
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
-    public int $campaignId;
-    public array $stats;
-    public string $line;
+    public $campaignId;
+    public $stats;
+    public $line;
 
-    public function __construct(int $campaignId, array $stats, string $line)
+    public function __construct($campaignId, $stats, $line)
     {
         $this->campaignId = $campaignId;
         $this->stats = $stats;
         $this->line  = $line;
     }
 
-    public function broadcastOn(): Channel
+    public function broadcastOn()
     {
         return new PrivateChannel("campaign.{$this->campaignId}");
     }
 
-    public function broadcastAs(): string
+    public function broadcastAs()
     {
         return 'progress'; // 👈 matches .listen('.progress')
     }

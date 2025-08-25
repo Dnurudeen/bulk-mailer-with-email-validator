@@ -1,5 +1,6 @@
 <?php
 
+use App\Events\CampaignProgressUpdated;
 use App\Http\Controllers\CampaignController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
@@ -15,6 +16,21 @@ Route::get('/', function () {
 // Route::get('/dashboard', function () {
 //     return view('dashboard');
 // })->middleware(['auth', 'verified'])->name('dashboard');
+
+Route::get('/test-broadcast/{campaignId}', function ($campaignId) {
+    $stats = [
+        'pending' => rand(0, 5),
+        'queued'  => rand(0, 5),
+        'sent'    => rand(1, 10),
+        'failed'  => rand(0, 2),
+    ];
+
+    $line = "[" . now()->format('H:i:s') . "] Test broadcast fired.";
+
+    event(new CampaignProgressUpdated($campaignId, $stats, $line));
+
+    return "Test event for campaign {$campaignId} dispatched!";
+});
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');

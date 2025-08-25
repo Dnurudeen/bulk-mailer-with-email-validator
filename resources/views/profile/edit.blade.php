@@ -7,17 +7,35 @@
 
     <div class="py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
-            <div class="p-4 sm:p-8 bg-white shadow sm:rounded-lg">
+            <fieldset class="p-4 sm:p-8 shadow sm:rounded-lg border border-gray-300 dark:border-gray-400 rounded px-4">
+                <legend>
+                    <h2 class="text-lg font-medium text-white-800 ">
+                        {{ __('Profile Information') }}
+                    </h2>
+                </legend>
+                <header>
+
+
+                    <p class="mt-1 text-sm dark:text-gray-400">
+                        {{ __("Update your account's profile information and email address.") }}
+                    </p>
+                </header>
                 <div class="max-w-xl">
                     @include('profile.partials.update-profile-information-form')
                 </div>
-            </div>
+            </fieldset>
 
-            <div class="p-4 sm:p-8 bg-white shadow sm:rounded-lg">
+            <fieldset
+                class="p-4 sm:p-8 shadow sm:rounded-lg border border-gray-300 dark:border-gray-400 rounded px-4">
+                <legend>
+                    <h2 class="text-lg font-medium text-white-800">
+                        {{ __('Update Password') }}
+                    </h2>
+                </legend>
                 <div class="max-w-xl">
                     @include('profile.partials.update-password-form')
                 </div>
-            </div>
+            </fieldset>
 
             <div class="p-4 sm:p-8 bg-white shadow sm:rounded-lg">
                 <div class="max-w-xl">

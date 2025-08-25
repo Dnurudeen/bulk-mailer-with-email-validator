@@ -42,7 +42,8 @@
                     <button class="px-4 py-2 btn btn-success bg-green-500 rounded">Start Now</button>
                 </form>
                 <form method="POST" action="{{ route('campaigns.pause', $campaign) }}">@csrf
-                    <button class="px-4 py-2 btn btn-warning dark:bg-white bg-black dark:text-gray-800 text-white rounded">Pause</button>
+                    <button
+                        class="px-4 py-2 btn btn-warning dark:bg-white bg-black dark:text-gray-800 text-white rounded">Pause</button>
                 </form>
                 <form method="POST" action="{{ route('campaigns.resume', $campaign) }}">@csrf
                     <button class="px-4 py-2 btn btn-info bg-blue-600 rounded">Resume</button>
@@ -137,8 +138,8 @@
                 <div>
                     <div class="text-sm font-semibold mb-2">Live Worker Output</div>
                     {{-- <pre id="workerLog" class="bg-black text-green-400 p-3 rounded h-48 overflow-auto text-xs"></pre> --}}
-                    <div class="bg-black text-green-400 font-mono p-2 h-40 overflow-y-scroll rounded">
-                        <template x-for="line in logLines" :key="line">
+                    <div class="bg-black text-green-400 font-mono p-2 h-40 overflow-y-scroll rounded log-output">
+                        <template x-for="(line, index) in logLines" :key="index">
                             <div x-text="line"></div>
                         </template>
                     </div>
@@ -148,7 +149,7 @@
     </div>
 
     {{-- Alpine.js (tiny) for reactive widget; if you already have it, skip the CDN) --}}
-    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    {{-- <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script> --}}
     <script type="module">
         window.campaignProgress = (campaignId, initial) => ({
             campaignId,
@@ -162,19 +163,12 @@
                     return Math.max(1, this.pending + this.queued + this.sent + this.failed);
                 }
             },
+            logLines: [], // <-- ✅ add this so Alpine tracks log messages
             get percent() {
                 const done = this.stats.sent + this.stats.failed;
                 return Number(((done / this.stats.total()) * 100).toFixed(1));
             },
             init() {
-                const logEl = document.getElementById('workerLog');
-                const appendLog = (line) => {
-                    if (!line) return;
-                    const atBottom = (logEl.scrollTop + logEl.clientHeight) >= (logEl.scrollHeight - 5);
-                    logEl.textContent += (logEl.textContent ? '\n' : '') + line;
-                    if (atBottom) logEl.scrollTop = logEl.scrollHeight;
-                };
-
                 // Subscribe to private channel via Echo (Reverb)
                 window.Echo.private(`campaign.${this.campaignId}`)
                     .listen('.progress', (e) => {
@@ -185,11 +179,17 @@
                             this.stats.failed = e.stats.failed ?? this.stats.failed;
                             this.stats.status = e.stats.status ?? this.stats.status;
                         }
-                        if (e?.line) appendLog(e.line);
+                        if (e?.line) {
+                            this.logLines.push(e.line); // ✅ push into reactive array
+                            this.$nextTick(() => {
+                                const container = this.$root.querySelector('.log-output');
+                                container.scrollTop = container.scrollHeight;
+                            });
+                        }
                     });
 
                 // Initial line
-                appendLog(`[${new Date().toLocaleTimeString()}] Subscribed: campaign.${this.campaignId}`);
+                this.logLines.push(`[${new Date().toLocaleTimeString()}] Subscribed: campaign.${this.campaignId}`);
             }
         });
     </script>
