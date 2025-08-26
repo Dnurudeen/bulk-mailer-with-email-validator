@@ -4,7 +4,7 @@
             <h1 class="font-semibold text-xl">Validation: {{ $batch->original_name }}</h1>
             <form method="POST" action="{{ route('validation.storeList', $batch) }}" class="flex gap-2">
                 @csrf
-                <input type="text" name="name" class="border rounded p-2" placeholder="Recipient list name" required>
+                <input type="text" name="name" class="border border-white-400 dark:bg-gray-800 rounded p-2" placeholder="Recipient list name" required>
                 <button class="px-3 py-2 bg-green-600 text-white rounded">Save Valid as List</button>
             </form>
         </div>
