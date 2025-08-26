@@ -2,6 +2,7 @@
 
 use App\Events\CampaignProgressUpdated;
 use App\Http\Controllers\CampaignController;
+use App\Http\Controllers\EmailValidationController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 
@@ -59,6 +60,11 @@ Route::middleware('auth')->group(function () {
 
     // Route::post('/campaigns/{campaign}/dispatch-batch', [CampaignController::class, 'dispatchNextBatch'])
     //     ->name('campaigns.dispatchBatch');
+
+    Route::get('/validation',           [EmailValidationController::class, 'create'])->name('validation.create');
+    Route::post('/validation',           [EmailValidationController::class, 'store'])->name('validation.store');
+    Route::get('/validation/{batch}',   [EmailValidationController::class, 'show'])->name('validation.show');
+    Route::post('/validation/{batch}/list', [EmailValidationController::class, 'storeList'])->name('validation.storeList');
 });
 
 require __DIR__.'/auth.php';

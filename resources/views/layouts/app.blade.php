@@ -18,6 +18,8 @@
         <!-- Scripts -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
         <script src="https://kit.fontawesome.com/3df60fe6e2.js" crossorigin="anonymous"></script>
+
+        <x-head.tinymce-config />
     </head>
 
     <body class="font-sans antialiased dark:bg-gray-800 dark:text-white">

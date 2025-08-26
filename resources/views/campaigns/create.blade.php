@@ -23,7 +23,7 @@
                     </div>
                     <div>
                         <label class="block font-medium">HTML Body</label>
-                        <textarea name="html_body" rows="8" class="w-full border border-white-400 dark:bg-gray-800 rounded p-2" required><h1>Hello!</h1><p>Your content here.</p></textarea>
+                        <textarea name="html_body" id="description" rows="8" class="w-full border border-white-400 dark:bg-gray-800 rounded p-2" required><h1>Hello!</h1><p>Your content here.</p></textarea>
                     </div>
                     <div class="grid grid-cols-2 gap-4">
                         <div>
