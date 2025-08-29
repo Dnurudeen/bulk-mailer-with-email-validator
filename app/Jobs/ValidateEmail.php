@@ -20,6 +20,10 @@ class ValidateEmail implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
+    public $timeout = 120;
+    public $tries = 3;
+    public $backoff = 10;
+
     public function __construct(
         public int $batchId,
         public string $email,

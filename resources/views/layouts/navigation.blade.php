@@ -1,4 +1,5 @@
-<nav x-data="{ open: false }" class="bg-white dark:bg-gray-800 dark:text-white border-b border-gray-100 dark:border-gray-700">
+<nav x-data="{ open: false }"
+    class="bg-white dark:bg-gray-800 dark:text-white border-b border-gray-100 dark:border-gray-700">
     <!-- Primary Navigation Menu -->
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between h-16">
@@ -42,6 +43,10 @@
                             {{ __('Profile') }}
                         </x-dropdown-link>
 
+                        <x-dropdown-link :href="route('smtp.index')">
+                            {{ __('SMTP Config') }}
+                        </x-dropdown-link>
+
                         <!-- Authentication -->
                         <form method="POST" action="{{ route('logout') }}">
                             @csrf
@@ -55,7 +60,8 @@
                     </x-slot>
                 </x-dropdown>
 
-                <i class="fa fa-moon dark:text-white p-2" id="dark-mode" style="font-size: 20px; cursor: pointer;" onclick="toggleDarkMode()"></i>
+                <i class="fa fa-moon dark:text-white p-2" id="dark-mode" style="font-size: 20px; cursor: pointer;"
+                    onclick="toggleDarkMode()"></i>
                 {{-- <button onclick="toggleDarkMode()" class="p-2 rounded bg-gray-200 dark:bg-gray-700 dark:text-white">
                     Toggle Dark Mode
                 </button> --}}

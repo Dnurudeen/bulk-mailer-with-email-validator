@@ -4,6 +4,7 @@ use App\Events\CampaignProgressUpdated;
 use App\Http\Controllers\CampaignController;
 use App\Http\Controllers\EmailValidationController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\SmtpSettingController;
 use Illuminate\Support\Facades\Route;
 
 // Route::get('/', function () {
@@ -65,6 +66,8 @@ Route::middleware('auth')->group(function () {
     Route::post('/validation',           [EmailValidationController::class, 'store'])->name('validation.store');
     Route::get('/validation/{batch}',   [EmailValidationController::class, 'show'])->name('validation.show');
     Route::post('/validation/{batch}/list', [EmailValidationController::class, 'storeList'])->name('validation.storeList');
+
+    Route::resource('smtp', SmtpSettingController::class);
 });
 
-require __DIR__.'/auth.php';
+require __DIR__ . '/auth.php';

@@ -13,10 +13,9 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\Middleware\RateLimited;
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
-
+use App\Helpers\MailHelper;
 use App\Events\CampaignProgressUpdated;
 use App\Support\CampaignStats;
 
@@ -24,17 +23,14 @@ class SendCampaignEmail implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    public int $timeout = 120;
-    public int $tries = 3;
-    // public \Carbon\Carbon $startedAt;
+    // public int $timeout = 120;
+    public int $tries = 3;     // max retry attempts
+    // public int $backoff = 5;  // wait 5s before next retry
 
     public function __construct(
         public int $campaignId,
         public int $recipientId,
-        // public int $jobId
-    ) {
-        // $this->startedAt = now();
-    }
+    ) {}
 
     public function middleware(): array
     {
@@ -50,8 +46,7 @@ class SendCampaignEmail implements ShouldQueue
             /** @var MailCampaign $campaign */
             $campaign = MailCampaign::findOrFail($this->campaignId);
             if (in_array($campaign->status, ['paused', 'completed', 'draft'])) {
-                // Requeue later instead of failing hard if paused
-                $this->release(300); // 5 min
+                $this->release(300); // requeue later if paused
                 return;
             }
 
@@ -64,53 +59,67 @@ class SendCampaignEmail implements ShouldQueue
                     'status' => 'failed',
                     'error'  => 'Invalid email',
                 ]);
-
                 return;
             }
+
+            // Configure active SMTP
+            MailHelper::configureMail();
 
             // Send
             Mail::to($recipient->email)->send(
                 new CampaignMailable($campaign->subject, $campaign->html_body)
             );
 
-            // Mark sent
+            // Mark as sent
             $campaign->recipients()->updateExistingPivot($recipient->id, [
                 'status'  => 'sent',
                 'sent_at' => now(),
                 'error'   => null,
             ]);
 
-            // After marking sent or failed, add:
-
-            // $stats = CampaignStats::snapshot($campaign);
-            // $line  = '[' . now()->format('H:i:s') . "] Processed: {$recipient->email}";
-            // event(new CampaignProgressUpdated($campaign->id, $stats, $line));
+            // Broadcast progress update
             $stats = CampaignStats::snapshot($campaign);
-            $line = '[' . now()->format('H:i:s') . "] Processed: {$recipient->email}";
-            broadcast(new CampaignProgressUpdated($campaign->id, $stats, $line));
-
-            // event(new CampaignProgressUpdated($campaign->id, $stats, $line));   
-
-            // broadcast(new CampaignProgressUpdated($campaign->id, $stats, $line))->toOthers();
-
-            // $line = '[' . now()->format('H:i:s') . "] Paused: job requeued for {$campaign->id}";
-            // event(new CampaignProgressUpdated($campaign->id, CampaignStats::snapshot($campaign), $line));
+            $line = '[' . now()->format('H:i:s') . "] Processed: {$recipient->email} Sent";
+            event(new CampaignProgressUpdated($campaign->id, $stats, $line));
         } catch (ModelNotFoundException $e) {
             Log::warning('Campaign or recipient missing for job', [
                 'campaignId' => $this->campaignId,
-                'recipientId' => $this->recipientId
+                'recipientId' => $this->recipientId,
             ]);
-
             $this->fail($e);
         } catch (\Throwable $e) {
-            // Mark failed
-            if ($campaign ?? null) {
-                $campaign->recipients()->updateExistingPivot($this->recipientId, [
-                    'status' => 'failed',
-                    'error'  => substr($e->getMessage(), 0, 190),
-                ]);
+            Log::error("❌ Send attempt {$this->attempts()} for recipient {$this->recipientId} failed: " . $e->getMessage());
+
+            if ($this->attempts() >= $this->tries) {
+                // Mark as permanently failed
+                if ($campaign ?? null) {
+                    $campaign->recipients()->updateExistingPivot($this->recipientId, [
+                        'status' => 'failed',
+                        'error'  => substr($e->getMessage(), 0, 190),
+                    ]);
+
+                    $line  = '[' . now()->format('H:i:s') . "] Failed: {$recipient->email}";
+                    event(new \App\Events\CampaignProgressUpdated($campaign->id, $stats, $line));
+                }
+                Log::error("💀 Recipient {$this->recipientId} marked as failed after {$this->tries} attempts.");
             }
-            throw $e;
+
+            throw $e; // rethrow so Laravel retries
         }
     }
 }
+
+// if ($campaign ?? null) {
+//     // If we've hit the last attempt, mark as failed
+//     if ($this->attempts() >= $this->tries) {
+//         $campaign->recipients()->updateExistingPivot($this->recipientId, [
+//             'status' => 'failed',
+//             'error'  => substr($e->getMessage(), 0, 190),
+//         ]);
+
+//         // 🔥 broadcast updated stats so progress updates in real-time
+//         $stats = \App\Support\CampaignStats::snapshot($campaign);
+//         $line  = '[' . now()->format('H:i:s') . "] Failed: {$recipient->email}";
+//         event(new \App\Events\CampaignProgressUpdated($campaign->id, $stats, $line));
+//     }
+// }

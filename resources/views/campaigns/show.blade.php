@@ -37,19 +37,6 @@
                 </form>
             </div>
 
-            <div class="flex gap-2 mb-6">
-                <form method="POST" action="{{ route('campaigns.start', $campaign) }}">@csrf
-                    <button class="px-4 py-2 btn btn-success bg-green-500 rounded">Start Now</button>
-                </form>
-                <form method="POST" action="{{ route('campaigns.pause', $campaign) }}">@csrf
-                    <button
-                        class="px-4 py-2 btn btn-warning dark:bg-white bg-black dark:text-gray-800 text-white rounded">Pause</button>
-                </form>
-                <form method="POST" action="{{ route('campaigns.resume', $campaign) }}">@csrf
-                    <button class="px-4 py-2 btn btn-info bg-blue-600 rounded">Resume</button>
-                </form>
-            </div>
-
             <div class="border border-white-400 p-4 rounded shadow" x-data="campaignProgress({{ $campaign->id }}, {{ json_encode([
                 'pending' => $campaign->recipients()->wherePivot('status', 'pending')->count(),
                 'queued' => $campaign->recipients()->wherePivot('status', 'queued')->count(),
@@ -91,6 +78,21 @@
             </div>
 
             <br>
+            
+            <div class="flex gap-2 mb-6">
+                <form method="POST" action="{{ route('campaigns.start', $campaign) }}">@csrf
+                    <button class="px-4 py-2 btn btn-success bg-green-500 rounded">Start Now</button>
+                </form>
+                <form method="POST" action="{{ route('campaigns.pause', $campaign) }}">@csrf
+                    <button
+                        class="px-4 py-2 btn btn-warning dark:bg-white bg-black dark:text-gray-800 text-white rounded">Pause</button>
+                </form>
+                <form method="POST" action="{{ route('campaigns.resume', $campaign) }}">@csrf
+                    <button class="px-4 py-2 btn btn-info bg-blue-600 rounded">Resume</button>
+                </form>
+            </div>
+ 
+            
 
             {{-- LIVE PROGRESS PANEL --}}
             <div class="border border-white-400 p-4 rounded shadow mb-6 mt-6" x-data="campaignProgress({{ $campaign->id }}, {{ json_encode([
