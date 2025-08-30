@@ -50,7 +50,18 @@ class CampaignController extends Controller
         $campaign->load(['recipients' => function ($q) {
             $q->limit(50);
         }]);
-        return view('campaigns.show', compact('campaign'));
+        
+        return view('campaigns.show', [
+            'campaign' => $campaign,
+            'initialRecipients' => $campaign->recipients()->limit(50)->get()->map(fn($r) => [
+                'id' => $r->id,
+                'email' => $r->email,
+                'status' => $r->pivot->status,
+                'queued_at' => optional($r->pivot->queued_at)?->toDateTimeString(),
+                'sent_at' => optional($r->pivot->sent_at)?->toDateTimeString(),
+                'error' => $r->pivot->error,
+            ]),
+        ]);
     }
 
     public function uploadRecipients(Request $request, MailCampaign $campaign)

@@ -25,6 +25,7 @@ class SendCampaignEmail implements ShouldQueue
 
     // public int $timeout = 120;
     public int $tries = 3;     // max retry attempts
+    public $timeout = 120;
     // public int $backoff = 5;  // wait 5s before next retry
 
     public function __construct(
@@ -59,6 +60,18 @@ class SendCampaignEmail implements ShouldQueue
                     'status' => 'failed',
                     'error'  => 'Invalid email',
                 ]);
+
+                $stats = CampaignStats::snapshot($campaign);
+                $line  = '[' . now()->format('H:i:s') . "] Invalid email: {$recipient->email}";
+                event(new CampaignProgressUpdated($campaign->id, $stats, $line, [
+                    'id' => $recipient->id,
+                    'email' => $recipient->email,
+                    'status' => 'failed',
+                    'queued_at' => null,
+                    'sent_at' => null,
+                    'error' => 'Invalid email',
+                ]));
+
                 return;
             }
 
@@ -77,10 +90,17 @@ class SendCampaignEmail implements ShouldQueue
                 'error'   => null,
             ]);
 
-            // Broadcast progress update
+            // Broadcast success update
             $stats = CampaignStats::snapshot($campaign);
-            $line = '[' . now()->format('H:i:s') . "] Processed: {$recipient->email} Sent";
-            event(new CampaignProgressUpdated($campaign->id, $stats, $line));
+            $line  = '[' . now()->format('H:i:s') . "] Sent: {$recipient->email}";
+            event(new CampaignProgressUpdated($campaign->id, $stats, $line, [
+                'id' => $recipient->id,
+                'email' => $recipient->email,
+                'status' => 'sent',
+                'queued_at' => null,
+                'sent_at' => now()->toDateTimeString(),
+                'error' => null,
+            ]));
         } catch (ModelNotFoundException $e) {
             Log::warning('Campaign or recipient missing for job', [
                 'campaignId' => $this->campaignId,
@@ -90,18 +110,25 @@ class SendCampaignEmail implements ShouldQueue
         } catch (\Throwable $e) {
             Log::error("❌ Send attempt {$this->attempts()} for recipient {$this->recipientId} failed: " . $e->getMessage());
 
-            if ($this->attempts() >= $this->tries) {
+            if (($this->attempts() >= $this->tries) && isset($campaign)) {
                 // Mark as permanently failed
-                if ($campaign ?? null) {
-                    $campaign->recipients()->updateExistingPivot($this->recipientId, [
-                        'status' => 'failed',
-                        'error'  => substr($e->getMessage(), 0, 190),
-                    ]);
+                $campaign->recipients()->updateExistingPivot($this->recipientId, [
+                    'status' => 'failed',
+                    'error'  => substr($e->getMessage(), 0, 190),
+                ]);
 
-                    $line  = '[' . now()->format('H:i:s') . "] Failed: {$recipient->email}";
-                    event(new \App\Events\CampaignProgressUpdated($campaign->id, $stats, $line));
-                }
-                Log::error("💀 Recipient {$this->recipientId} marked as failed after {$this->tries} attempts.");
+                $recipient = $recipient ?? Recipient::find($this->recipientId);
+
+                $stats = CampaignStats::snapshot($campaign);
+                $line  = '[' . now()->format('H:i:s') . "] Failed: {$recipient?->email}";
+                event(new CampaignProgressUpdated($campaign->id, $stats, $line, [
+                    'id' => $recipient?->id,
+                    'email' => $recipient?->email,
+                    'status' => 'failed',
+                    'queued_at' => null,
+                    'sent_at' => null,
+                    'error' => substr($e->getMessage(), 0, 190),
+                ]));
             }
 
             throw $e; // rethrow so Laravel retries

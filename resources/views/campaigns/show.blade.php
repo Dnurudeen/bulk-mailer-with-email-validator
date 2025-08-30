@@ -43,7 +43,8 @@
                 'sent' => $campaign->recipients()->wherePivot('status', 'sent')->count(),
                 'failed' => $campaign->recipients()->wherePivot('status', 'failed')->count(),
                 'status' => $campaign->status,
-            ]) }})" x-init="init()">
+                'recipients' => $initialRecipients,
+            ]) }})">
                 <div class="flex justify-between items-center my-auto mb-5">
                     <h2 class="font-semibold">Recent Recipients (first 50)</h2>
 
@@ -64,21 +65,21 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach ($campaign->recipients as $r)
+                        <template x-for="recipient in stats.recipients" :key="recipient.id">
                             <tr class="border-b">
-                                <td class="p-2">{{ $r->email }}</td>
-                                <td class="p-2">{{ $r->pivot->status }}</td>
-                                <td class="p-2">{{ optional($r->pivot->queued_at)->toDateTimeString() }}</td>
-                                <td class="p-2">{{ optional($r->pivot->sent_at)->toDateTimeString() }}</td>
-                                <td class="p-2">{{ $r->pivot->error }}</td>
+                                <td class="p-2" x-text="recipient.email"></td>
+                                <td class="p-2" x-text="recipient.status"></td>
+                                <td class="p-2" x-text="recipient.queued_at ?? ''"></td>
+                                <td class="p-2" x-text="recipient.sent_at ?? ''"></td>
+                                <td class="p-2" x-text="recipient.error ?? ''"></td>
                             </tr>
-                        @endforeach
+                        </template>
                     </tbody>
                 </table>
             </div>
 
             <br>
-            
+
             <div class="flex gap-2 mb-6">
                 <form method="POST" action="{{ route('campaigns.start', $campaign) }}">@csrf
                     <button class="px-4 py-2 btn btn-success bg-green-500 rounded">Start Now</button>
@@ -91,8 +92,8 @@
                     <button class="px-4 py-2 btn btn-info bg-blue-600 rounded">Resume</button>
                 </form>
             </div>
- 
-            
+
+
 
             {{-- LIVE PROGRESS PANEL --}}
             <div class="border border-white-400 p-4 rounded shadow mb-6 mt-6" x-data="campaignProgress({{ $campaign->id }}, {{ json_encode([
@@ -101,6 +102,7 @@
                 'sent' => $campaign->recipients()->wherePivot('status', 'sent')->count(),
                 'failed' => $campaign->recipients()->wherePivot('status', 'failed')->count(),
                 'status' => $campaign->status,
+                'recipients' => $initialRecipients,
             ]) }})"
                 x-init="init()">
                 <div class="flex justify-between items-center mb-3">
@@ -161,9 +163,12 @@
                 sent: initial.sent ?? 0,
                 failed: initial.failed ?? 0,
                 status: initial.status ?? 'draft',
+                recipients: initial.recipients ?? [], // <-- add this
                 total() {
-                    return Math.max(1, this.pending + this.queued + this.sent + this.failed);
+                    return Math.max(1, this.stats.pending + this.stats.queued + this.stats.sent + this.stats
+                    .failed);
                 }
+
             },
             logLines: [], // <-- ✅ add this so Alpine tracks log messages
             get percent() {
@@ -180,6 +185,13 @@
                             this.stats.sent = e.stats.sent ?? this.stats.sent;
                             this.stats.failed = e.stats.failed ?? this.stats.failed;
                             this.stats.status = e.stats.status ?? this.stats.status;
+                        }
+                        if (e?.recipient) {
+                            // find recipient and update its pivot fields
+                            let r = this.stats.recipients.find(x => x.id === e.recipient.id);
+                            if (r) {
+                                Object.assign(r, e.recipient); // update status, queued_at, sent_at, error
+                            }
                         }
                         if (e?.line) {
                             this.logLines.push(e.line); // ✅ push into reactive array
