@@ -19,8 +19,8 @@ return new class extends Migration
         });
 
         Schema::create('recipient_list_recipient', function (Blueprint $table) {
-            $table->foreignId('recipient_list_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('recipient_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('recipient_list_id')->constrained('recipient_lists')->cascadeOnDelete();
+            $table->foreignId('recipient_id')->constrained()->cascadeOnDelete(); // assumes recipients table exists
             $table->primary(['recipient_list_id', 'recipient_id']);
         });
     }
@@ -30,7 +30,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('recipient_lists');
         Schema::dropIfExists('recipient_list_recipient');
+        Schema::dropIfExists('recipient_lists');
     }
 };

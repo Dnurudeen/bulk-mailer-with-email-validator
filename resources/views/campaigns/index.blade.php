@@ -5,7 +5,7 @@
             <h1 class="font-semibold text-xl light:text-gray-800 leading-tight">Campaigns</h1>
             <div>
                 <a class="px-4 py-2 bg-red-600 btn btn-danger rounded" href="{{ route('campaigns.create') }}">New Campaign</a>
-                <a class="px-4 py-2 bg-gray-800 btn btn-danger rounded" href="{{ route('validation.create') }}">Recipient</a>
+                <a class="px-4 py-2 bg-gray-800 btn btn-danger rounded" href="{{ route('validation.index') }}">Validate Email</a>
             </div>
         </div>
     </x-slot>

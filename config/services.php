@@ -74,4 +74,10 @@ return [
 
     'collect_statistics' => true,
 
+    'validemail' => [
+        'key' => env('VALIDEMAIL_KEY'),
+        'endpoint' => env('VALIDEMAIL_ENDPOINT', 'https://api.ValidEmail.net/'),
+        'min_score' => (int) env('VALIDEMAIL_MIN_SCORE', 80),
+        'enabled' => filter_var(env('USE_VALIDEMAIL_API', true), FILTER_VALIDATE_BOOLEAN),
+    ],
 ];

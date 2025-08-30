@@ -62,10 +62,15 @@ Route::middleware('auth')->group(function () {
     // Route::post('/campaigns/{campaign}/dispatch-batch', [CampaignController::class, 'dispatchNextBatch'])
     //     ->name('campaigns.dispatchBatch');
 
-    Route::get('/validation',           [EmailValidationController::class, 'create'])->name('validation.create');
-    Route::post('/validation',           [EmailValidationController::class, 'store'])->name('validation.store');
-    Route::get('/validation/{batch}',   [EmailValidationController::class, 'show'])->name('validation.show');
-    Route::post('/validation/{batch}/list', [EmailValidationController::class, 'storeList'])->name('validation.storeList');
+    // Route::get('/validation',           [EmailValidationController::class, 'create'])->name('validation.create');
+    // Route::post('/validation',           [EmailValidationController::class, 'store'])->name('validation.store');
+    // Route::get('/validation/{batch}',   [EmailValidationController::class, 'show'])->name('validation.show');
+    // Route::post('/validation/{batch}/list', [EmailValidationController::class, 'storeList'])->name('validation.storeList');
+
+    Route::get('/validation', [\App\Http\Controllers\ValidationController::class, 'index'])->name('validation.index');
+    Route::post('/validation', [\App\Http\Controllers\ValidationController::class, 'store'])->name('validation.store');
+    Route::get('/validation/{batch}', [\App\Http\Controllers\ValidationController::class, 'show'])->name('validation.show');
+    Route::post('/validation/{batch}/save-list', [\App\Http\Controllers\ValidationController::class, 'saveValidToList'])->name('validation.save_list');
 
     Route::resource('smtp', SmtpSettingController::class);
 });

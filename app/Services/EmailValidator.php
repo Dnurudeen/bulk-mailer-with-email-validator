@@ -2,47 +2,26 @@
 
 namespace App\Services;
 
-class EmailValidator
+use Illuminate\Support\Facades\Http;
+
+class EmailValidationService
 {
-    public function isValid(string $email): bool
+    protected $apiKey;
+    protected $url;
+
+    public function __construct()
     {
-        return $this->isSyntaxValid($email) && $this->hasValidMx($email);
+        $this->apiKey = config('services.email_validation.key');
+        $this->url = config('services.email_validation.url');
     }
 
-    public function isSyntaxValid(string $email): bool
+    public function validate(string $email): array
     {
-        return filter_var($email, FILTER_VALIDATE_EMAIL) !== false;
-    }
+        $response = Http::get($this->url, [
+            'email' => $email,
+            'api_key' => $this->apiKey,
+        ]);
 
-    public function hasValidMx(string $email): bool
-    {
-        $domain = substr(strrchr($email, "@"), 1);
-        return $domain && checkdnsrr($domain, 'MX');
-    }
-
-    public function optionalApiCheck(string $email): ?bool
-    {
-        // Return true/false if you integrate a provider; null to skip
-        // Example stub:
-        // if (!config('services.validator.enabled')) return null;
-        return null;
+        return $response->json();
     }
 }
-    // public function isValid(string $email): bool
-    // {
-    //     // Basic format
-    //     if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-    //         return false;
-    //     }
-
-    //     // Extract domain & MX check
-    //     $domain = substr(strrchr($email, "@"), 1);
-    //     if (!$domain) return false;
-
-    //     // checkdnsrr requires PHP DNS functions enabled
-    //     if (!checkdnsrr($domain, 'MX') && !checkdnsrr($domain, 'A')) {
-    //         return false;
-    //     }
-
-    //     return true;
-    // }
