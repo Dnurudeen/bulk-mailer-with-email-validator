@@ -76,8 +76,8 @@ return [
 
     'validemail' => [
         'key' => env('VALIDEMAIL_KEY'),
-        'endpoint' => env('VALIDEMAIL_ENDPOINT', 'https://api.ValidEmail.net/'),
-        'min_score' => (int) env('VALIDEMAIL_MIN_SCORE', 80),
-        'enabled' => filter_var(env('USE_VALIDEMAIL_API', true), FILTER_VALIDATE_BOOLEAN),
+        'endpoint' => 'https://api.validemail.net/',
+        'enabled' => env('USE_VALIDEMAIL_API', false),
+        'min_score' => env('VALIDEMAIL_MIN_SCORE', 80),
     ],
 ];

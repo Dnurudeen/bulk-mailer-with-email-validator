@@ -3,7 +3,7 @@
         <h1 class="font-semibold text-xl">Validation: {{ $batch->filename }}</h1>
     </x-slot>
 
-    <div class="max-w-6xl mx-auto py-8" x-data="validationProgress({{ $batch->id }}, {{ json_encode($initialStats) }}, {{ json_encode($initialResults) }})" x-init="init()">
+    <div class="max-w-6xl mx-auto py-8" x-data="validationProgress({{ $batch->id }}, {{ json_encode($initialStats) }}, {{ json_encode($initialResults) }})">
 
         <!-- Progress + stats -->
         <div class="border p-4 rounded mb-4">
@@ -41,9 +41,9 @@
         <!-- Tabs + actions -->
         <div class="flex justify-between items-center mb-3">
             <div>
-                <button :class="tab === 'valid' ? 'bg-green-600 text-white' : 'bg-gray-200'" @click="tab='valid'"
+                <button :class="tab === 'valid' ? 'bg-green-600 text-white' : 'bg-gray-400'" @click="tab='valid'"
                     class="px-3 py-1 rounded">Valid</button>
-                <button :class="tab === 'invalid' ? 'bg-red-600 text-white' : 'bg-gray-200'" @click="tab='invalid'"
+                <button :class="tab === 'invalid' ? 'bg-red-600 text-white' : 'bg-gray-400'" @click="tab='invalid'"
                     class="px-3 py-1 rounded ml-2">Invalid</button>
                 <button @click="refresh()" class="px-3 py-1 bg-blue-500 text-white rounded ml-4">Refresh</button>
             </div>
@@ -108,7 +108,7 @@
         </div>
     </div>
 
-    @push('scripts')
+    {{-- @push('scripts')
         <script>
             window.validationProgress = (batchId, initialStats = {}, initialResults = []) => ({
                 batchId,
@@ -196,5 +196,5 @@
                 }
             });
         </script>
-    @endpush
+    @endpush --}}
 </x-app-layout>

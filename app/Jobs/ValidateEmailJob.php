@@ -61,24 +61,29 @@ class ValidateEmailJob implements ShouldQueue
 
         if (config('services.validemail.enabled') && config('services.validemail.key')) {
             try {
-                $resp = Http::acceptJson()->get(config('services.validemail.endpoint'), [
+                $url = rtrim(config('services.validemail.endpoint'), '/');
+                $resp = Http::get("{$url}", [
                     'email' => $email,
                     'token' => config('services.validemail.key'),
                 ]);
 
                 if ($resp->successful()) {
                     $apiResponse = $resp->json();
+
                     $apiOk = $apiResponse['IsValid'] ?? null;
                     $score = isset($apiResponse['Score']) ? (int)$apiResponse['Score'] : null;
                     $state = $apiResponse['State'] ?? null;
                     $reason = $apiResponse['Reason'] ?? null;
                     $mxRecord = $apiResponse['MXRecord'] ?? null;
                     $extra = $apiResponse['EmailAdditionalInfo'] ?? [];
+                } else {
+                    \Log::warning("ValidEmail API bad response for {$email}: " . $resp->body());
                 }
             } catch (\Throwable $e) {
                 Log::warning("ValidEmail API error for {$email}: {$e->getMessage()}");
             }
         }
+
 
         // Decide final validity using combined checks
         $minScore = config('services.validemail.min_score', 80);
