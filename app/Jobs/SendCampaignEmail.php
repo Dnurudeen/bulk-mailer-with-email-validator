@@ -79,7 +79,7 @@ class SendCampaignEmail implements ShouldQueue
             MailHelper::configureMail();
 
             // Send
-            Mail::to($recipient->email)->send(
+            Mail::to($recipient->email)->queue(
                 new CampaignMailable($campaign->subject, $campaign->html_body)
             );
 
