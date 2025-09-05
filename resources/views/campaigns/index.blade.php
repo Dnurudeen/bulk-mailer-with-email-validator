@@ -44,6 +44,4 @@
         {{ $campaigns->links('pagination::bootstrap-5') }}
     </div>
 
-    {{-- <div class="mt-4">{{ $campaigns->links() }}</div> --}}
-    {{-- @endsection --}}
 </x-app-layout>

@@ -2,6 +2,7 @@
 
 use App\Events\CampaignProgressUpdated;
 use App\Http\Controllers\CampaignController;
+use App\Http\Controllers\EmailController;
 use App\Http\Controllers\EmailValidationController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SmtpSettingController;
@@ -71,6 +72,13 @@ Route::middleware('auth')->group(function () {
     Route::post('/validation', [\App\Http\Controllers\ValidationController::class, 'store'])->name('validation.store');
     Route::get('/validation/{batch}', [\App\Http\Controllers\ValidationController::class, 'show'])->name('validation.show');
     Route::post('/validation/{batch}/save-list', [\App\Http\Controllers\ValidationController::class, 'saveValidToList'])->name('validation.save_list');
+
+    Route::get('/emails', [EmailController::class, 'index'])->name('emails.index');
+    Route::post('/emails/upload', [EmailController::class, 'upload'])->name('emails.upload');
+    Route::get('/emails/statuses', [EmailController::class, 'statuses'])->name('emails.statuses');
+    Route::get('/emails/export', [EmailController::class, 'export'])->name('emails.export');
+    Route::delete('/emails/clear', [EmailController::class, 'clear'])->name('emails.clear');
+
 
     Route::resource('smtp', SmtpSettingController::class);
 });

@@ -12,3 +12,7 @@ Broadcast::channel('validation.{batchId}', function ($user, $batchId) {
     $batch = ValidationBatch::find($batchId);
     return $batch && $batch->user_id === $user->id;
 });
+
+Broadcast::channel('emails', function () {
+    return true; // anyone can listen
+});
